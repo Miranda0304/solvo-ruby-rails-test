@@ -2,7 +2,7 @@ module Reservations
   module Rules
     class CapacityRestrictionByUser
       def self.call!(user:, room:)
-        return user.is_admin?
+        return if user.is_admin?
         return if room.capacity <= user.max_capacity_allowed
 
         raise Reservations::Rules::BusinessRuleError, "Room capacity exceeds your limit"
