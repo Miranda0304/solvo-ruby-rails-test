@@ -1,7 +1,11 @@
-module Users
+module Rooms
   class RoomRepository
     def initialize(model: Room)
       @model = model
+    end
+
+    def find_all
+      @model.all
     end
 
     def find(id)

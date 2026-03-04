@@ -5,7 +5,7 @@ module Users
     end
 
     def find_all
-      User.all
+      @model.all
     end
 
     def find(id)
