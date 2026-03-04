@@ -54,12 +54,12 @@ module Reservations
 
       def dates
         result = []
-        current = @params[:starts_at]
+        current = @starts_at
 
-        while current <= @params[:recurring_until]
+        while current <= @recurring_until
           result << current
 
-          current = case @params[:recurring]
+          current = case @recurring
             when "daily"
               current + 1.day
             when "weekly"

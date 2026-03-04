@@ -5,7 +5,7 @@ module Reservations
     end
 
     def find_all
-      @model.all
+      @model.includes(:room, :user)
     end
 
     def find(id)
