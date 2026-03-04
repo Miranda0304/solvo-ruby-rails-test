@@ -5,14 +5,21 @@ module Reservations
         new(params).call
       end
 
-      def initialize(params, repo_reservation: Reservations::ReservationRepository.new)
+      def initialize(params,
+                     repo_reservation: Reservations::ReservationRepository.new,
+                     repo_user: Users::UserRepository.new,
+                     repo_room: Rooms::RoomRepository.new)
+        @user = repo_user.find(params[:user_id])
+        @room = repo_room.find(params[:room_id])
         @repo_reservation = repo_reservation
-        @room = Room.find(params[:room_id])
-        @user = User.find(params[:user_id])
         @starts_at = Time.zone.parse(params[:starts_at])
         @ends_at = Time.zone.parse(params[:ends_at])
         @recurring = params[:recurring]
         @recurring_until = parse_recurring_until(params[:recurring_until])
+      end
+
+      def parse_recurring_until(recurring_until)
+        recurring_until && Time.zone.parse(recurring_until)
       end
 
       def call

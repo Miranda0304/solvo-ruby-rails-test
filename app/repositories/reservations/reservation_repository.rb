@@ -4,6 +4,10 @@ module Reservations
       @model = model
     end
 
+    def find_all
+      @model.all
+    end
+
     def find(id)
       @model.find(id)
     end

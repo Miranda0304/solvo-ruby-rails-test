@@ -1,4 +1,14 @@
 class Api::V1::ReservationsController < ApplicationController
+  def index
+    reservations = Reservations::FindAll.new.call
+    render json: serialize_collection(reservations)
+  end
+
+  def show
+    reservation = Reservations::Find.new.call(params[:id])
+    render json: serialize(reservation)
+  end
+
   def create
     reservations = Reservations::Rules::RecurringReservations.call!(params_reservation)
 
@@ -7,18 +17,16 @@ class Api::V1::ReservationsController < ApplicationController
     render json: { error: e.message }, status: :unprocessable_entity
   end
 
-  private
+  def cancel
+    reservation = Reservations::Rules::AdvanceCancellation
+      .call!(id: params[:id])
 
-  # def params_reservation
-  #   {
-  #     room: Room.find(params[:room_id]),
-  #     user: User.find(params[:user_id]),
-  #     starts_at: Time.zone.parse(params[:starts_at]),
-  #     ends_at: Time.zone.parse(params[:ends_at]),
-  #     recurring: params[:recurring],
-  #     recurring_until: params[:recurring_until] && Time.zone.parse(params[:recurring_until]),
-  #   }
-  # end
+    render json: serialize(reservation)
+  rescue Reservations::Rules::BusinessRuleError => e
+    render json: { error: e.message }, status: :unprocessable_entity
+  end
+
+  private
 
   def params_reservation
     params.permit(:room_id, :user_id, :starts_at, :ends_at, :recurring, :recurring_until)
