@@ -1,6 +1,6 @@
 module Reservations
   module Rules
-    class ActiveReservation
+    class ActiveReservationLimit
       LIMIT = 3
       def self.call!(user:)
         return if user.is_admin?

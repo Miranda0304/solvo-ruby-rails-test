@@ -23,12 +23,13 @@ module Reservations
       end
 
       def call
+        created = []
         ActiveRecord::Base.transaction do
           build_occurrences.each do |attrs|
             validate_rules!(attrs)
-            # * Here, it can move create inside a repository to split responsibility
             created << @repo_reservation.create(attrs)
           end
+          created
         end
       end
 
@@ -81,11 +82,30 @@ module Reservations
       end
 
       def validate_rules!(attrs)
-        Reservations::Rules::NoOverlap.call!(room: attrs[:room], starts_at: attrs[:starts_at], ends_at: attrs[:ends_at])
-        Reservations::Rules::MaxDuration.call!(starts_at: attrs[:starts_at], ends_at: attrs[:ends_at])
-        Reservations::Rules::BusinessHours.call!(starts_at: attrs[:starts_at], ends_at: attrs[:ends_at])
-        Reservations::Rules::CapacityRestrictionByUser.call!(user: attrs[:user], room: attrs[:room])
-        Reservations::Rules::ActiveReservationLimit.call!(user: attrs[:user])
+        Reservations::Rules::NoOverlap.call!(
+          room: @room,
+          starts_at: attrs[:starts_at],
+          ends_at: attrs[:ends_at],
+        )
+
+        Reservations::Rules::MaxDuration.call!(
+          starts_at: attrs[:starts_at],
+          ends_at: attrs[:ends_at],
+        )
+
+        Reservations::Rules::BusinessHours.call!(
+          starts_at: attrs[:starts_at],
+          ends_at: attrs[:ends_at],
+        )
+
+        Reservations::Rules::CapacityRestrictionByUser.call!(
+          user: @user,
+          room: @room,
+        )
+
+        Reservations::Rules::ActiveReservationLimit.call!(
+          user: @user,
+        )
       end
     end
   end

@@ -35,8 +35,8 @@ class Api::V1::ReservationsController < ApplicationController
   def serialize(reservation)
     {
       id: reservation.id,
-      room_id: reservation.room_id,
-      user_id: reservation.user_id,
+      room_id: reservation.room.name,
+      user_id: reservation.user.name,
       starts_at: reservation.starts_at,
       ends_at: reservation.ends_at,
     }

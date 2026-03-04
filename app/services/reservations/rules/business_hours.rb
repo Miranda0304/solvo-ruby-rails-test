@@ -1,15 +1,19 @@
 module Reservations
   module Rules
-    class BusinessHour
+    class BusinessHours
       START_HOUR = 9
       END_HOUR = 18
 
       def self.call!(starts_at:, ends_at:)
-        raise Reservations::Rules::BusinessRuleError, "Outside business hours"
+        raise Reservations::Rules::BusinessRuleError, "Outside business days" if weekend?(starts_at)
+
+        unless within_hours(starts_at, ends_at)
+          raise Reservations::Rules::BusinessRuleError, "Outside business hours"
+        end
       end
 
       def self.weekend?(time)
-        time.saturday || time.sunday
+        time.saturday? || time.sunday?
       end
 
       def self.within_hours(starts_at, ends_at)
