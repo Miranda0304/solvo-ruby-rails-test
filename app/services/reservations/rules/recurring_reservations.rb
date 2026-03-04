@@ -1,21 +1,26 @@
 module Reservations
   module Rules
     class RecurringReservations
-      def self.call!(params, repository: Reservations::ReservationRepository.new)
+      def self.call!(params)
         new(params).call
       end
 
-      def initialize(params, repository: Reservations::ReservationRepository.new)
-        @params = params
-        @repository = repository
+      def initialize(params, repo_reservation: Reservations::ReservationRepository.new)
+        @repo_reservation = repo_reservation
+        @room = Room.find(params[:room_id])
+        @user = User.find(params[:user_id])
+        @starts_at = Time.zone.parse(params[:starts_at])
+        @ends_at = Time.zone.parse(params[:ends_at])
+        @recurring = params[:recurring]
+        @recurring_until = parse_recurring_until(params[:recurring_until])
       end
 
       def call
         ActiveRecord::Base.transaction do
-          ocurrences = self.class.generate_occurrences(@params[:starts_at], @params[:ends_at], @params[:recurring], @params[:recurring_until])
-          ocurrences.each do |occurrence|
-            validate_rules!
-            @repository.create(room: @params[:room], user: @params[:user], starts_at: occurrence[:starts])
+          build_occurrences.each do |attrs|
+            validate_rules!(attrs)
+            # * Here, it can move create inside a repository to split responsibility
+            created << @repo_reservation.create(attrs)
           end
         end
       end
@@ -23,46 +28,57 @@ module Reservations
       private
 
       def recurring?
-        @params[:recurring].present?
+        @recurring.present?
       end
 
       def duration
-        @params[:ends_at] - @params[:starts_at]
+        @ends_at - @starts_at
       end
 
-      def self.generate_occurrences(starts_at, ends_at, recurring, recurring_until)
-        occurrences = []
-        current = starts_at
-        duration = ends_at - starts_at
+      def build_occurrences
+        return [base_attrs] unless recurring?
 
-        case recurring
-        when "daily"
-          while current.to_date <= recurring_until
-            occurrences << {
-              starts_at: current,
-              ends_at: current + duration,
-            }
-            current = current + 1.day
-          end
-        when "weekly"
-          while current.to_date <= recurring_until
-            occurrences << {
-              starts_at: current,
-              ends_at: current + duration,
-            }
-            current = current + 1.week
-          end
+        dates.map do |date|
+          base_attrs.merge(starts_at: date,
+                           ends_at: date + duration)
+        end
+      end
+
+      def dates
+        result = []
+        current = @params[:starts_at]
+
+        while current <= @params[:recurring_until]
+          result << current
+
+          current = case @params[:recurring]
+            when "daily"
+              current + 1.day
+            when "weekly"
+              current + 1.week
+            else
+              raise Reservations::Rules::BusinessRuleError, "Invalid recurring type"
+            end
         end
 
-        occurrences
+        result
       end
 
-      def validate_rules!
-        Reservations::Rules::NoOverlap.call!(room: @params[:room], starts_at: @params[:starts_at], ends_at: @params[:ends_at])
-        Reservations::Rules::MaxDuration.call!(starts_at: @params[:starts_at], ends_at: @params[:ends_at])
-        Reservations::Rules::BusinessHour.call!(starts_at: @params[:starts_at], ends_at: @params[:ends_at])
-        Reservations::Rules::CapacityRestrictionByUser.call!(user: @params[:user], room: @params[:room])
-        Reservations::Rules::ActiveReservation.call!(user: @params[:user])
+      def base_attrs
+        {
+          room: @room,
+          user: @user,
+          starts_at: @starts_at,
+          ends_at: @ends_at,
+        }
+      end
+
+      def validate_rules!(attrs)
+        Reservations::Rules::NoOverlap.call!(room: attrs[:room], starts_at: attrs[:starts_at], ends_at: attrs[:ends_at])
+        Reservations::Rules::MaxDuration.call!(starts_at: attrs[:starts_at], ends_at: attrs[:ends_at])
+        Reservations::Rules::BusinessHours.call!(starts_at: attrs[:starts_at], ends_at: attrs[:ends_at])
+        Reservations::Rules::CapacityRestrictionByUser.call!(user: attrs[:user], room: attrs[:room])
+        Reservations::Rules::ActiveReservationLimit.call!(user: attrs[:user])
       end
     end
   end
