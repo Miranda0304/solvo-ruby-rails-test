@@ -4,8 +4,8 @@ RSpec.describe "Api::V1::Users", type: :request do
   describe "GET /api/v1/users" do
     it "returns users" do
       User.create!(
-        name: "Jane",
-        email: "jane@test.com",
+        name: "jesus",
+        email: "jesus@test.com",
         department: "HR",
         max_capacity_allowed: 4,
       )
@@ -20,8 +20,8 @@ RSpec.describe "Api::V1::Users", type: :request do
     it "creates a user" do
       expect {
         post "/api/v1/users", params: {
-                           name: "Mike",
-                           email: "mike@test.com",
+                           name: "jesus",
+                           email: "jesus@test.com",
                            department: "Finance",
                            max_capacity_allowed: 6,
                          }

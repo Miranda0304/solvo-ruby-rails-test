@@ -14,6 +14,11 @@ class Api::V1::RoomsController < ApplicationController
     render json: room, status: :created
   end
 
+  def availability
+    rooms = Rooms::FindAll.new.call
+    render json: rooms, status: :ok
+  end
+
   private
 
   def room_params

@@ -13,8 +13,8 @@ RSpec.describe "Api::V1::Reservations", type: :request do
 
   let!(:user) do
     User.create!(
-      name: "John",
-      email: "john@test.com",
+      name: "jesus",
+      email: "jesus@test.com",
       department: "IT",
       max_capacity_allowed: 5,
       is_admin: false,
