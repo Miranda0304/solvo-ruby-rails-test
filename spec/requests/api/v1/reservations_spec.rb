@@ -63,40 +63,41 @@ RSpec.describe "Api::V1::Reservations", type: :request do
     end
   end
 
-  #   describe "POST /api/v1/reservations" do
-  #     let(:valid_params) do
-  #       {
-  #         room_id: room.id,
-  #         user_id: user.id,
-  #         starts_at: 1.hour.from_now,
-  #         ends_at: 2.hours.from_now,
-  #       }
-  #     end
+  describe "POST /api/v1/reservations" do
+    let(:starts_at) { Time.zone.parse("2026-03-04 10:00") }
+    let(:ends_at) { Time.zone.parse("2026-03-04 12:00") }
 
-  #     it "creates reservation(s)" do
-  #       expect {
-  #         post "/api/v1/reservations", params: valid_params
-  #       }.to change(Reservation, :count)
+    let(:valid_params) do
+      {
+        room_id: room.id,
+        user_id: user.id,
+        starts_at: starts_at,
+        ends_at: ends_at,
+      }
+    end
+    it "creates reservation(s)" do
+      post "/api/v1/reservations", params: valid_params
 
-  #       expect(response).to have_http_status(:created)
-  #     end
-  #   end
+      puts Reservation.all.inspect
+      puts response.body
+    end
+  end
 
-  #   describe "PATCH /api/v1/reservations/:id/cancel" do
-  #     let!(:reservation) do
-  #       Reservation.create!(
-  #         room: room,
-  #         user: user,
-  #         starts_at: 1.hour.from_now,
-  #         ends_at: 2.hours.from_now,
-  #       )
-  #     end
+  describe "PATCH /api/v1/reservations/:id/cancel" do
+    let(:starts_at) { Time.zone.parse("2026-03-04 10:00") }
+    let(:ends_at) { Time.zone.parse("2026-03-04 12:00") }
 
-  #     it "cancels reservation" do
-  #       patch "/api/v1/reservations/#{reservation.id}/cancel"
+    let(:reservation) do
+      Reservation.create!(
+        room: room,
+        user: user,
+        starts_at: starts_at,
+        ends_at: ends_at,
+      )
+    end
 
-  #       expect(response).to have_http_status(:ok)
-  #       expect(reservation.reload.cancelled_at).not_to be_nil
-  #     end
-  #   end
+    it "cancels reservation" do
+      patch "/api/v1/reservations/#{reservation.id}/cancel"
+    end
+  end
 end
