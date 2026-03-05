@@ -15,9 +15,9 @@ RSpec.describe "Api::V1::Rooms", type: :request do
     it "creates a room" do
       expect {
         post "/api/v1/rooms", params: {
-                           name: "Room B",
-                           capacity: 8,
-                         }
+                                name: "Room B",
+                                capacity: 8,
+                              }
       }.to change(Room, :count).by(1)
 
       expect(response).to have_http_status(:created)

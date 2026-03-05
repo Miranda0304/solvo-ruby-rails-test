@@ -1,0 +1,18 @@
+services:
+  web:
+    build:
+      context: .
+      target: build # use build stage so dev gems work
+    container_name: backend_test_2
+    command: bash -c "rm -f tmp/pids/server.pid && bundle install && bin/rails db:prepare && bin/rails server -b 0.0.0.0 -p 3000"
+    volumes:
+      - .:/rails
+      - bundle_data:/usr/local/bundle
+    ports:
+      - "3000:3000"
+    environment:
+      RAILS_ENV: development
+      BUNDLE_WITHOUT: "" # include development gems
+
+volumes:
+  bundle_data:
